@@ -14,7 +14,7 @@ import * as THREE from 'three';
 var scene = new THREE.Scene();
 
 var camera = new THREE.PerspectiveCamera( 35, window.innerWidth / window.innerHeight, .1, 3000 );
-camera.position.z = 100;  
+camera.position.z = 1500;  
 camera.lookAt( new THREE.Vector3(0.0,0.0,0.0));
 scene.add( camera );
 
@@ -23,9 +23,96 @@ renderer.setClearColor(0x000000);
 renderer.setPixelRatio(window.devicePixelRatio);
 renderer.setSize(window.innerWidth, window.innerHeight);
 
-/* CREATE/DRAW STUFF HERE */
+// Create the object to represent a triangle
+function Triangle (a, aCol, b, bCol, c, cCol) {
+    // Build the vertices and colors manually by creating arrays
+    this.vertices = [
+      a[0], a[1], a[2],
+      b[0], b[1], b[2],
+      c[0], c[1], c[2],
+    ];
+    this.colors = [
+      aCol[0], aCol[1], aCol[2],
+      bCol[0], bCol[1], bCol[2],
+      cCol[0], cCol[1], cCol[2]
+    ];
 
-renderer.render( scene, camera );
+  // The function that actually adds the triangle geometry to the scene
+  this.render = function() {
+    var geometry = new THREE.BufferGeometry();
+    // Set the "position" attribute accordingly
+    // Note: itemSize = 3 (third argument) because there are 3 values (components) per vertex
+    geometry.setAttribute( 'position', new THREE.BufferAttribute( new Float32Array(this.vertices), 3 ) );
+    geometry.setAttribute( 'color', new THREE.BufferAttribute( new Float32Array(this.colors), 3 ) );
+    // Indicate that the material's vertexColors are based on the color attribute of vertexes
+    var material = new THREE.MeshBasicMaterial( { vertexColors: true } );
+    this.mesh= new THREE.Mesh( geometry, material );
+    scene.add(this.mesh);
+  }	
+}
+
+function Octagon (a, aCol, b, bCol, c, cCol, d, dCol, e, eCol, f, fCol, g, gCol, h, hCol) {
+    this.tri1 = new Triangle (a, aCol, b, bCol, c, cCol);
+    this.tri2 = new Triangle (a, aCol, c, cCol, d, dCol);
+    this.tri3 = new Triangle (a, aCol, d, dCol, e, eCol);
+    this.tri4 = new Triangle (a, aCol, e, eCol, f, fCol);
+    this.tri5 = new Triangle (a, aCol, f, fCol, g, gCol);
+    this.tri6 = new Triangle (a, aCol, g, gCol, h, hCol);
+
+
+    this.render = function() {
+        this.tri1.render();
+        this.tri2.render();
+        this.tri3.render();
+        this.tri4.render();
+        this.tri5.render();
+        this.tri6.render();
+
+    };
+}
+
+
+// Function to calculate vertex positions with scaling
+function calculateOctagonVertices(radius) {
+    let vertices = [];
+    for (let i = 0; i < 8; i++) {
+        let angle = (i / 8) * 2 * Math.PI; // Divide the circle into 8 sections
+        let x = radius * Math.cos(angle);  // x = r * cos(theta)
+        let y = radius * Math.sin(angle);  // y = r * sin(theta)
+        vertices.push([x, y, 0]); // z = 0 for a 2D shape
+    }
+    return vertices;
+}
+
+// Use the desired width and calculate the radius
+const width = 500;
+const radius = width / 2;
+const octagonVertices = calculateOctagonVertices(radius);
+
+// Define a fixed color (e.g., blue)
+const fixedColor = [0, 0, 1]; // Blue
+
+// Create the octagon using the vertices and fixed color
+const oct = new Octagon(
+    octagonVertices[0], fixedColor,
+    octagonVertices[1], fixedColor,
+    octagonVertices[2], fixedColor,
+    octagonVertices[3], fixedColor,
+    octagonVertices[4], fixedColor,
+    octagonVertices[5], fixedColor,
+    octagonVertices[6], fixedColor,
+    octagonVertices[7], fixedColor
+);
+
+
+ // Render loop
+ function animate() {
+    requestAnimationFrame(animate);
+    oct.render(); // Render the octagon
+    renderer.render(scene, camera);
+}
+animate();
+
     </script>
 </body>
 </html>
