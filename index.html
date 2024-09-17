@@ -9,6 +9,7 @@
 
     <script type="module">
 import * as THREE from 'three';
+import { EdgeSplitModifier } from 'three/addons/modifiers/EdgeSplitModifier.js';
 
 
 var scene = new THREE.Scene();
@@ -44,6 +45,7 @@ function Triangle (a, aCol, b, bCol, c, cCol) {
     // Note: itemSize = 3 (third argument) because there are 3 values (components) per vertex
     geometry.setAttribute( 'position', new THREE.BufferAttribute( new Float32Array(this.vertices), 3 ) );
     geometry.setAttribute( 'color', new THREE.BufferAttribute( new Float32Array(this.colors), 3 ) );
+    geometry.attributes.position.needsUpdate = true;
     // Indicate that the material's vertexColors are based on the color attribute of vertexes
     var material = new THREE.MeshBasicMaterial( { vertexColors: true } );
     this.mesh= new THREE.Mesh( geometry, material );
@@ -105,10 +107,65 @@ const oct = new Octagon(
 );
 
 
- // Render loop
+function createTriPieces(trianglePieces, octagonVertices){
+    var vertexX = 150 - Math.floor(Math.random()*300);
+    var vertexY = 150 - Math.floor(Math.random()*300);
+    const setColor = [1,0,0];
+    var centerPoint = [vertexX, vertexY, 0];
+    let count = 0;
+
+    for(let i = 0; i < 8; i++){
+        if(Math.floor(Math.random()*2) == 1 && count < 2 && i < 6){
+            count++;
+            var midpoint = [
+            (octagonVertices[i][0]+octagonVertices[i+1][0])/2, //get x
+            (octagonVertices[i][1]+octagonVertices[i+1][1])/2, //get y
+            (octagonVertices[i][2]+octagonVertices[i+1][2])/2  //get z
+            ];
+            trianglePieces.push(new Triangle(centerPoint, [0,0,1], octagonVertices[i], [0,0,1], midpoint, [0,0,1]));
+            trianglePieces.push(new Triangle(centerPoint, setColor, midpoint, setColor, octagonVertices[i+1], setColor));
+        }else if (count < 1 && i == 6){
+            count++;
+            var midpoint = [
+            (octagonVertices[i][0]+octagonVertices[i+1][0])/2, //get x
+            (octagonVertices[i][1]+octagonVertices[i+1][1])/2, //get y
+            (octagonVertices[i][2]+octagonVertices[i+1][2])/2  //get z
+            ];
+            trianglePieces.push(new Triangle(centerPoint, setColor, octagonVertices[i], setColor, midpoint, setColor));
+            trianglePieces.push(new Triangle(centerPoint, setColor, midpoint, setColor, octagonVertices[i+1], setColor));
+        } else if (count < 2 && i == 7){
+            count++;
+            var midpoint = [
+            (octagonVertices[i][0]+octagonVertices[0][0])/2, //get x
+            (octagonVertices[i][1]+octagonVertices[0][1])/2, //get y
+            (octagonVertices[i][2]+octagonVertices[0][2])/2  //get z
+            ];
+            trianglePieces.push(new Triangle(centerPoint, setColor, octagonVertices[i], setColor, midpoint, setColor));
+            trianglePieces.push(new Triangle(centerPoint, setColor, midpoint, setColor, octagonVertices[0], setColor));
+        } else if (i == 7){
+            trianglePieces.push(new Triangle(centerPoint, setColor, octagonVertices[i], setColor, octagonVertices[0], setColor));
+        } else{
+            trianglePieces.push(new Triangle(centerPoint, setColor, octagonVertices[i], setColor, octagonVertices[i+1], setColor));
+        }
+        
+    }
+
+    for(let i = 0; i < trianglePieces.length; i++){
+        trianglePieces[i].render();
+        
+    }
+
+}
+
+
+var trianglePieces = [];
+createTriPieces(trianglePieces, octagonVertices);
+
+ 
+// Render loop
  function animate() {
     requestAnimationFrame(animate);
-    oct.render(); // Render the octagon
+   // oct.render(); // Render the octagon
     renderer.render(scene, camera);
 }
 animate();
