@@ -15,7 +15,7 @@ import { EdgeSplitModifier } from 'three/addons/modifiers/EdgeSplitModifier.js';
 var scene = new THREE.Scene();
 
 var camera = new THREE.PerspectiveCamera( 35, window.innerWidth / window.innerHeight, .1, 3000 );
-camera.position.z = 1500;  
+camera.position.z = 2000;  
 camera.lookAt( new THREE.Vector3(0.0,0.0,0.0));
 scene.add( camera );
 
@@ -161,11 +161,25 @@ function createTriPieces(trianglePieces, octagonVertices){
 var trianglePieces = [];
 createTriPieces(trianglePieces, octagonVertices);
 
+for(let i = 0; i < trianglePieces.length; i++){
+    let degree = Math.floor(Math.random()*150+250);
+    if(Math.floor(Math.random()*2) == 1){
+        trianglePieces[i].mesh.position.y += degree;
+    }else {
+        trianglePieces[i].mesh.position.y -= degree;
+    }
+    degree = Math.floor(Math.random()*300+300);
+    if(Math.floor(Math.random()*2) == 1){
+        trianglePieces[i].mesh.position.x += degree;
+    }else {
+        trianglePieces[i].mesh.position.x -= degree;
+    }
+}
  
 // Render loop
  function animate() {
     requestAnimationFrame(animate);
-   // oct.render(); // Render the octagon
+    oct.render(); // Render the octagon
     renderer.render(scene, camera);
 }
 animate();
