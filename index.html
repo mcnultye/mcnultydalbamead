@@ -24,6 +24,15 @@ renderer.setClearColor(0x000000);
 renderer.setPixelRatio(window.devicePixelRatio);
 renderer.setSize(window.innerWidth, window.innerHeight);
 
+
+let raycaster = new THREE.Raycaster();
+let mouse = new THREE.Vector2();
+let selectedPiece = null;
+let dragging = false;
+let dragPlane = new THREE.Plane(new THREE.Vector3(0, 0, 1), 0); // Dragging happens on this plane
+let dragOffset = new THREE.Vector3();
+let intersection = new THREE.Vector3(); // Stores the intersection point
+
 // Create the object to represent a triangle
 function Triangle (a, aCol, b, bCol, c, cCol) {
     // Build the vertices and colors manually by creating arrays
@@ -45,7 +54,7 @@ function Triangle (a, aCol, b, bCol, c, cCol) {
     // Note: itemSize = 3 (third argument) because there are 3 values (components) per vertex
     geometry.setAttribute( 'position', new THREE.BufferAttribute( new Float32Array(this.vertices), 3 ) );
     geometry.setAttribute( 'color', new THREE.BufferAttribute( new Float32Array(this.colors), 3 ) );
-    geometry.attributes.position.needsUpdate = true;
+    //geometry.attributes.position.needsUpdate = true;
     // Indicate that the material's vertexColors are based on the color attribute of vertexes
     var material = new THREE.MeshBasicMaterial( { vertexColors: true } );
     this.mesh= new THREE.Mesh( geometry, material );
@@ -175,6 +184,50 @@ for(let i = 0; i < trianglePieces.length; i++){
         trianglePieces[i].mesh.position.x -= degree;
     }
 }
+
+// Mouse events for dragging
+window.addEventListener('mousedown', onMouseDown, false);
+window.addEventListener('mousemove', onMouseMove, false);
+window.addEventListener('mouseup', onMouseUp, false);
+
+function onMouseDown(event) {
+  event.preventDefault();
+  mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
+  mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
+
+  raycaster.setFromCamera(mouse, camera);
+  const intersects = raycaster.intersectObjects(scene.children);
+
+  if (intersects.length > 0) {
+    selectedPiece = intersects[0].object;
+    dragPlane.setFromNormalAndCoplanarPoint(camera.getWorldDirection(dragPlane.normal), selectedPiece.position);
+
+    if (raycaster.ray.intersectPlane(dragPlane, intersection)) {
+      dragOffset.copy(intersection).sub(selectedPiece.position);
+    }
+
+    dragging = true;
+  }
+}
+
+function onMouseMove(event) {
+  if (dragging && selectedPiece) {
+    mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
+    mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
+
+    raycaster.setFromCamera(mouse, camera);
+    if (raycaster.ray.intersectPlane(dragPlane, intersection)) {
+      selectedPiece.position.copy(intersection.sub(dragOffset));
+    }
+  }
+}
+
+function onMouseUp() {
+  dragging = false;
+  selectedPiece = null;
+}
+
+
  
 // Render loop
  function animate() {
