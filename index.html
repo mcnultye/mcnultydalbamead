@@ -183,13 +183,13 @@ var trianglePieces = [];
 createTriPieces(trianglePieces, octagonVertices);
 
 for(let i = 0; i < trianglePieces.length; i++){
-    let degree = Math.floor(Math.random()*150+250);
+    let degree = Math.floor(Math.random()*200+175);
     if(Math.floor(Math.random()*2) == 1){
         trianglePieces[i].mesh.position.y += degree;
     }else {
         trianglePieces[i].mesh.position.y -= degree;
     }
-    degree = Math.floor(Math.random()*300+300);
+    degree = Math.floor(Math.random()*400+425);
     if(Math.floor(Math.random()*2) == 1){
         trianglePieces[i].mesh.position.x += degree;
     }else {
