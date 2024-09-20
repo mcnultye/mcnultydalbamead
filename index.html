@@ -33,8 +33,9 @@ let dragPlane = new THREE.Plane(new THREE.Vector3(0, 0, 1), 0); // Dragging happ
 let dragOffset = new THREE.Vector3();
 let intersection = new THREE.Vector3(); // Stores the intersection point
 
+let octagonGroup = new THREE.Group();
 // Create the object to represent a triangle
-function Triangle (a, aCol, b, bCol, c, cCol) {
+function Triangle (a, aCol, b, bCol, c, cCol, renderOrder = 0) {
     // Build the vertices and colors manually by creating arrays
     this.vertices = [
       a[0], a[1], a[2],
@@ -58,17 +59,18 @@ function Triangle (a, aCol, b, bCol, c, cCol) {
     // Indicate that the material's vertexColors are based on the color attribute of vertexes
     var material = new THREE.MeshBasicMaterial( { vertexColors: true } );
     this.mesh= new THREE.Mesh( geometry, material );
+    this.mesh.renderOrder = renderOrder;
     scene.add(this.mesh);
   }	
 }
 
 function Octagon (a, aCol, b, bCol, c, cCol, d, dCol, e, eCol, f, fCol, g, gCol, h, hCol) {
-    this.tri1 = new Triangle (a, aCol, b, bCol, c, cCol);
-    this.tri2 = new Triangle (a, aCol, c, cCol, d, dCol);
-    this.tri3 = new Triangle (a, aCol, d, dCol, e, eCol);
-    this.tri4 = new Triangle (a, aCol, e, eCol, f, fCol);
-    this.tri5 = new Triangle (a, aCol, f, fCol, g, gCol);
-    this.tri6 = new Triangle (a, aCol, g, gCol, h, hCol);
+    this.tri1 = new Triangle (a, aCol, b, bCol, c, cCol, -1);
+    this.tri2 = new Triangle (a, aCol, c, cCol, d, dCol, -1);
+    this.tri3 = new Triangle (a, aCol, d, dCol, e, eCol, -1);
+    this.tri4 = new Triangle (a, aCol, e, eCol, f, fCol, -1);
+    this.tri5 = new Triangle (a, aCol, f, fCol, g, gCol, -1);
+    this.tri6 = new Triangle (a, aCol, g, gCol, h, hCol, -1);
 
 
     this.render = function() {
@@ -78,6 +80,15 @@ function Octagon (a, aCol, b, bCol, c, cCol, d, dCol, e, eCol, f, fCol, g, gCol,
         this.tri4.render();
         this.tri5.render();
         this.tri6.render();
+
+
+    // Add each triangle's mesh to the octagon group
+    octagonGroup.add(this.tri1.mesh);
+    octagonGroup.add(this.tri2.mesh);
+    octagonGroup.add(this.tri3.mesh);
+    octagonGroup.add(this.tri4.mesh);
+    octagonGroup.add(this.tri5.mesh);
+    octagonGroup.add(this.tri6.mesh);
 
     };
 }
@@ -115,6 +126,7 @@ const oct = new Octagon(
     octagonVertices[7], fixedColor
 );
 
+scene.add(octagonGroup);
 
 function createTriPieces(trianglePieces, octagonVertices){
     var vertexX = 150 - Math.floor(Math.random()*300);
@@ -131,7 +143,7 @@ function createTriPieces(trianglePieces, octagonVertices){
             (octagonVertices[i][1]+octagonVertices[i+1][1])/2, //get y
             (octagonVertices[i][2]+octagonVertices[i+1][2])/2  //get z
             ];
-            trianglePieces.push(new Triangle(centerPoint, [0,0,1], octagonVertices[i], [0,0,1], midpoint, [0,0,1]));
+            trianglePieces.push(new Triangle(centerPoint, setColor, octagonVertices[i], setColor, midpoint, setColor));
             trianglePieces.push(new Triangle(centerPoint, setColor, midpoint, setColor, octagonVertices[i+1], setColor));
         }else if (count < 1 && i == 6){
             count++;
@@ -199,14 +211,18 @@ function onMouseDown(event) {
   const intersects = raycaster.intersectObjects(scene.children);
 
   if (intersects.length > 0) {
-    selectedPiece = intersects[0].object;
-    dragPlane.setFromNormalAndCoplanarPoint(camera.getWorldDirection(dragPlane.normal), selectedPiece.position);
+    // Check if the intersected object is not part of the octagon group
+    if (!octagonGroup.children.includes(intersects[0].object)) {
+        selectedPiece = intersects[0].object;
+        selectedPiece.renderOrder = 1;
+        dragPlane.setFromNormalAndCoplanarPoint(camera.getWorldDirection(dragPlane.normal), selectedPiece.position);
 
-    if (raycaster.ray.intersectPlane(dragPlane, intersection)) {
-      dragOffset.copy(intersection).sub(selectedPiece.position);
+        if (raycaster.ray.intersectPlane(dragPlane, intersection)) {
+            dragOffset.copy(intersection).sub(selectedPiece.position);
+        }
+
+        dragging = true;
     }
-
-    dragging = true;
   }
 }
 
