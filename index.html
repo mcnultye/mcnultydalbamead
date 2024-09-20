@@ -33,6 +33,7 @@ let dragPlane = new THREE.Plane(new THREE.Vector3(0, 0, 1), 0); // Dragging happ
 let dragOffset = new THREE.Vector3();
 let intersection = new THREE.Vector3(); // Stores the intersection point
 
+let octagonGroup = new THREE.Group();
 // Create the object to represent a triangle
 function Triangle (a, aCol, b, bCol, c, cCol) {
     // Build the vertices and colors manually by creating arrays
@@ -79,6 +80,15 @@ function Octagon (a, aCol, b, bCol, c, cCol, d, dCol, e, eCol, f, fCol, g, gCol,
         this.tri5.render();
         this.tri6.render();
 
+
+    // Add each triangle's mesh to the octagon group
+    octagonGroup.add(this.tri1.mesh);
+    octagonGroup.add(this.tri2.mesh);
+    octagonGroup.add(this.tri3.mesh);
+    octagonGroup.add(this.tri4.mesh);
+    octagonGroup.add(this.tri5.mesh);
+    octagonGroup.add(this.tri6.mesh);
+
     };
 }
 
@@ -115,6 +125,7 @@ const oct = new Octagon(
     octagonVertices[7], fixedColor
 );
 
+scene.add(octagonGroup);
 
 function createTriPieces(trianglePieces, octagonVertices){
     var vertexX = 150 - Math.floor(Math.random()*300);
@@ -199,14 +210,17 @@ function onMouseDown(event) {
   const intersects = raycaster.intersectObjects(scene.children);
 
   if (intersects.length > 0) {
-    selectedPiece = intersects[0].object;
-    dragPlane.setFromNormalAndCoplanarPoint(camera.getWorldDirection(dragPlane.normal), selectedPiece.position);
+    // Check if the intersected object is not part of the octagon group
+    if (!octagonGroup.children.includes(intersects[0].object)) {
+        selectedPiece = intersects[0].object;
+        dragPlane.setFromNormalAndCoplanarPoint(camera.getWorldDirection(dragPlane.normal), selectedPiece.position);
 
-    if (raycaster.ray.intersectPlane(dragPlane, intersection)) {
-      dragOffset.copy(intersection).sub(selectedPiece.position);
+        if (raycaster.ray.intersectPlane(dragPlane, intersection)) {
+            dragOffset.copy(intersection).sub(selectedPiece.position);
+        }
+
+        dragging = true;
     }
-
-    dragging = true;
   }
 }
 
