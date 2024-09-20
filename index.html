@@ -131,7 +131,7 @@ function createTriPieces(trianglePieces, octagonVertices){
             (octagonVertices[i][1]+octagonVertices[i+1][1])/2, //get y
             (octagonVertices[i][2]+octagonVertices[i+1][2])/2  //get z
             ];
-            trianglePieces.push(new Triangle(centerPoint, [0,0,1], octagonVertices[i], [0,0,1], midpoint, [0,0,1]));
+            trianglePieces.push(new Triangle(centerPoint, setColor, octagonVertices[i], setColor, midpoint, setColor));
             trianglePieces.push(new Triangle(centerPoint, setColor, midpoint, setColor, octagonVertices[i+1], setColor));
         }else if (count < 1 && i == 6){
             count++;
