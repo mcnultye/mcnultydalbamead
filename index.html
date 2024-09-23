@@ -60,6 +60,7 @@ function Triangle (a, aCol, b, bCol, c, cCol, renderOrder = 0) {
     var material = new THREE.MeshBasicMaterial( { vertexColors: true } );
     this.mesh= new THREE.Mesh( geometry, material );
     this.mesh.renderOrder = renderOrder;
+    this.mesh.isDraggable = true;
     scene.add(this.mesh);
   }	
 }
@@ -208,24 +209,30 @@ function onMouseDown(event) {
   mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
 
   raycaster.setFromCamera(mouse, camera);
-  const intersects = raycaster.intersectObjects(scene.children);
+
+ // Get all draggable objects by checking the `isDraggable` property
+ const draggableObjects = scene.children.filter(
+    (child) => child.isDraggable
+  );
+
+  // Check intersections only with draggable objects
+  const intersects = raycaster.intersectObjects(draggableObjects);
 
   if (intersects.length > 0) {
-    // Check if the intersected object is not part of the octagon group
-    if (!octagonGroup.children.includes(intersects[0].object)) {
-        selectedPiece = intersects[0].object;
-        selectedPiece.renderOrder = 1;
-        dragPlane.setFromNormalAndCoplanarPoint(camera.getWorldDirection(dragPlane.normal), selectedPiece.position);
+    selectedPiece = intersects[0].object;
+    selectedPiece.renderOrder = 1;
+    dragPlane.setFromNormalAndCoplanarPoint(
+      camera.getWorldDirection(dragPlane.normal),
+      selectedPiece.position
+    );
 
-        if (raycaster.ray.intersectPlane(dragPlane, intersection)) {
-            dragOffset.copy(intersection).sub(selectedPiece.position);
-        }
-
-        dragging = true;
+    if (raycaster.ray.intersectPlane(dragPlane, intersection)) {
+      dragOffset.copy(intersection).sub(selectedPiece.position);
     }
+
+    dragging = true;
   }
 }
-
 function onMouseMove(event) {
   if (dragging && selectedPiece) {
     mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
