@@ -10,9 +10,10 @@
     <script type="module">
 import * as THREE from 'three';
 import { EdgeSplitModifier } from 'three/addons/modifiers/EdgeSplitModifier.js';
-
+import { GUI } from 'dat.gui';
 
 var scene = new THREE.Scene();
+scene.background = new THREE.Color(0x000000);
 
 var camera = new THREE.PerspectiveCamera( 35, window.innerWidth / window.innerHeight, .1, 3000 );
 camera.position.z = 2000;  
@@ -24,6 +25,12 @@ renderer.setClearColor(0x000000);
 renderer.setPixelRatio(window.devicePixelRatio);
 renderer.setSize(window.innerWidth, window.innerHeight);
 
+const gui = new GUI( { width: 280 } );
+gui.add(camera.position, 'z', 1000, 3000,).name('Change Screen Size');
+const materialParams = {
+    backgroundColor: scene.background.getHex(),
+};
+gui.addColor(materialParams, 'backgroundColor').onChange((value)=> scene.background = new THREE.Color(value));
 
 let raycaster = new THREE.Raycaster();
 let mouse = new THREE.Vector2();
@@ -102,8 +109,6 @@ const octagonVertices = calculateOctagonVertices(radius);
 const octOutline = new OctagonOutline(octagonVertices);
 octOutline.render();
 
-
-
 function createTriPieces(trianglePieces, octagonVertices){
     var vertexX = 150 - Math.floor(Math.random()*300);
     var vertexY = 150 - Math.floor(Math.random()*300);
@@ -161,7 +166,7 @@ createTriPieces(trianglePieces, octagonVertices);
 for(let i = 0; i < trianglePieces.length; i++){
     let degree = Math.floor(Math.random()*200+175);
     if(Math.floor(Math.random()*2) == 1){
-        trianglePieces[i].mesh.position.y += degree;
+        trianglePieces[i].mesh.position.y += (degree-75);
     }else {
         trianglePieces[i].mesh.position.y -= degree;
     }
