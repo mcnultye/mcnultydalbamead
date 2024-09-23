@@ -60,39 +60,26 @@ function Triangle (a, aCol, b, bCol, c, cCol, renderOrder = 0) {
     var material = new THREE.MeshBasicMaterial( { vertexColors: true } );
     this.mesh= new THREE.Mesh( geometry, material );
     this.mesh.renderOrder = renderOrder;
+    this.mesh.isDraggable = true;
     scene.add(this.mesh);
   }	
 }
 
-function Octagon (a, aCol, b, bCol, c, cCol, d, dCol, e, eCol, f, fCol, g, gCol, h, hCol) {
-    this.tri1 = new Triangle (a, aCol, b, bCol, c, cCol, -1);
-    this.tri2 = new Triangle (a, aCol, c, cCol, d, dCol, -1);
-    this.tri3 = new Triangle (a, aCol, d, dCol, e, eCol, -1);
-    this.tri4 = new Triangle (a, aCol, e, eCol, f, fCol, -1);
-    this.tri5 = new Triangle (a, aCol, f, fCol, g, gCol, -1);
-    this.tri6 = new Triangle (a, aCol, g, gCol, h, hCol, -1);
+ // Function to create an outlined octagon
+ function OctagonOutline(vertices) {
+    const points = vertices.map((v) => new THREE.Vector3(...v));
+    points.push(points[0]); // Close the loop
 
+    const geometry = new THREE.BufferGeometry().setFromPoints(points);
+    const material = new THREE.LineBasicMaterial({ color: 0x0000ff, linewidth: 2 }); // Outline material
 
-    this.render = function() {
-        this.tri1.render();
-        this.tri2.render();
-        this.tri3.render();
-        this.tri4.render();
-        this.tri5.render();
-        this.tri6.render();
+    this.line = new THREE.Line(geometry, material);
 
-
-    // Add each triangle's mesh to the octagon group
-    octagonGroup.add(this.tri1.mesh);
-    octagonGroup.add(this.tri2.mesh);
-    octagonGroup.add(this.tri3.mesh);
-    octagonGroup.add(this.tri4.mesh);
-    octagonGroup.add(this.tri5.mesh);
-    octagonGroup.add(this.tri6.mesh);
-
+    // Render method to add the outline to the scene
+    this.render = function () {
+        scene.add(this.line);
     };
 }
-
 
 // Function to calculate vertex positions with scaling
 function calculateOctagonVertices(radius) {
@@ -111,22 +98,11 @@ const width = 500;
 const radius = width / 2;
 const octagonVertices = calculateOctagonVertices(radius);
 
-// Define a fixed color (e.g., blue)
-const fixedColor = [0, 0, 1]; // Blue
+// Create the octagon outline using the vertices
+const octOutline = new OctagonOutline(octagonVertices);
+octOutline.render();
 
-// Create the octagon using the vertices and fixed color
-const oct = new Octagon(
-    octagonVertices[0], fixedColor,
-    octagonVertices[1], fixedColor,
-    octagonVertices[2], fixedColor,
-    octagonVertices[3], fixedColor,
-    octagonVertices[4], fixedColor,
-    octagonVertices[5], fixedColor,
-    octagonVertices[6], fixedColor,
-    octagonVertices[7], fixedColor
-);
 
-scene.add(octagonGroup);
 
 function createTriPieces(trianglePieces, octagonVertices){
     var vertexX = 150 - Math.floor(Math.random()*300);
@@ -208,36 +184,39 @@ function onMouseDown(event) {
   mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
 
   raycaster.setFromCamera(mouse, camera);
-  const intersects = raycaster.intersectObjects(scene.children);
 
+ // Get all draggable objects by checking the `isDraggable` property
+ const draggableObjects = scene.children.filter(
+    (child) => child.isDraggable
+  );
+
+  // Check intersections only with draggable objects
+  const intersects = raycaster.intersectObjects(draggableObjects);
   if (intersects.length > 0) {
-    // Check if the intersected object is not part of the octagon group
-    if (!octagonGroup.children.includes(intersects[0].object)) {
-        selectedPiece = intersects[0].object;
-        selectedPiece.renderOrder = 1;
-        dragPlane.setFromNormalAndCoplanarPoint(camera.getWorldDirection(dragPlane.normal), selectedPiece.position);
+    selectedPiece = intersects[0].object;
+    dragging = true;
 
-        if (raycaster.ray.intersectPlane(dragPlane, intersection)) {
-            dragOffset.copy(intersection).sub(selectedPiece.position);
-        }
-
-        dragging = true;
-    }
-  }
+    // Get the point on the dragging plane
+    raycaster.ray.intersectPlane(dragPlane, intersection);
+    dragOffset.copy(intersection).sub(selectedPiece.position);
+}
 }
 
 function onMouseMove(event) {
-  if (dragging && selectedPiece) {
+    event.preventDefault();
     mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
     mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
 
-    raycaster.setFromCamera(mouse, camera);
-    if (raycaster.ray.intersectPlane(dragPlane, intersection)) {
-      selectedPiece.position.copy(intersection.sub(dragOffset));
-    }
-  }
-}
+    if (dragging && selectedPiece) {
+        raycaster.setFromCamera(mouse, camera);
 
+        // Update intersection with the drag plane
+        raycaster.ray.intersectPlane(dragPlane, intersection);
+
+        // Move the selected piece
+        selectedPiece.position.copy(intersection).sub(dragOffset);
+    }
+}
 function onMouseUp() {
   dragging = false;
   selectedPiece = null;
@@ -248,7 +227,6 @@ function onMouseUp() {
 // Render loop
  function animate() {
     requestAnimationFrame(animate);
-    oct.render(); // Render the octagon
     renderer.render(scene, camera);
 }
 animate();
