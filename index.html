@@ -109,6 +109,38 @@ const octagonVertices = calculateOctagonVertices(radius);
 const octOutline = new OctagonOutline(octagonVertices);
 octOutline.render();
 
+function puzzleP(tri) //taking single triangle for now
+{
+    this.triangle = tri;
+    this.firstX = tri.mesh.position.x;
+    this.firstY = tri.mesh.position.y;
+
+    this.lastX = 0;
+    this.lastY = 0;
+
+    this.closeEnough = function()
+    {
+        var cE = false;
+        if(Math.abs(tri.mesh.position.x - this.firstX)<= 5 && Math.abs(tri.mesh.position.y - this.firstY)<= 5)
+        {   
+            tri.mesh.position.x = this.firstX;
+            tri.mesh.position.y = this.firstY;
+            cE = true;
+        }
+        return cE;
+    }
+
+    this.returnLast = function()
+    {
+        for(let i = 0; i < triPieces.length; i++)
+        {
+            tri.mesh.position.x = lastX;
+            tri.mesh.position.y = lastY;
+        }
+        
+    }
+}
+
 function createTriPieces(trianglePieces, octagonVertices){
     var vertexX = 150 - Math.floor(Math.random()*300);
     var vertexY = 150 - Math.floor(Math.random()*300);
@@ -163,6 +195,12 @@ function createTriPieces(trianglePieces, octagonVertices){
 var trianglePieces = [];
 createTriPieces(trianglePieces, octagonVertices);
 
+var puzzlePieces = []; //recording orginal position of pieces before randomized on screen 
+for(let i = 0; i < trianglePieces.length; i++)
+{
+    puzzlePieces[i] = new puzzleP(trianglePieces[i]);
+}
+
 for(let i = 0; i < trianglePieces.length; i++){
     let degree = Math.floor(Math.random()*200+175);
     if(Math.floor(Math.random()*2) == 1){
@@ -176,6 +214,12 @@ for(let i = 0; i < trianglePieces.length; i++){
     }else {
         trianglePieces[i].mesh.position.x -= degree;
     }
+}
+
+for(let i = 0; i < trianglePieces.length; i++) //recording where they were randomized to
+{
+    puzzlePieces[i].lastX = trianglePieces[i].mesh.position.x;
+    puzzlePieces[i].lastY = trianglePieces[i].mesh.position.y;
 }
 
 // Mouse events for dragging
@@ -223,6 +267,21 @@ function onMouseMove(event) {
     }
 }
 function onMouseUp() {
+
+if (dragging && selectedPiece)  //locks it into place 
+{
+    if (puzzlePieces.find(p => p.triangle.mesh === selectedPiece).closeEnough()) 
+    {
+      selectedPiece.isDraggable = false; 
+    } 
+    else 
+    {
+      const puzzlePiece = puzzlePieces.find(p => p.triangle.mesh === selectedPiece);
+      selectedPiece.position.x = puzzlePiece.lastX;
+      selectedPiece.position.y = puzzlePiece.lastY;
+    }
+  }
+
   dragging = false;
   selectedPiece = null;
 }
