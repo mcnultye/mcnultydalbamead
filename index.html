@@ -42,13 +42,15 @@ renderer.setSize(window.innerWidth, window.innerHeight);
 //Creating the GUI
 //This allows the user to change the background of the screen when the window is open
 const gui = new GUI( { width: 280 } );
+//adding the ability to change the camera position to the GUI
 gui.add(camera.position, 'z', 1000, 3000,).name('Change Screen Size');
 const materialParams = {
     backgroundColor: scene.background.getHex(),
 };
+//adding the ability to change the background color to the GUI
 gui.addColor(materialParams, 'backgroundColor').onChange((value)=> scene.background = new THREE.Color(value));
 
-//Adding sound
+//Adding audiolistener and sound
 const listener = new THREE.AudioListener();
 camera.add( listener );
 const sound = new THREE.Audio( listener );
@@ -182,13 +184,13 @@ function puzzleP(tri)
 
 //Creating the triangle puzzle pieces
 function createTriPieces(trianglePieces, octagonVertices, numP){
-    var vertexX = 150 - Math.floor(Math.random()*300);
-    var vertexY = 150 - Math.floor(Math.random()*300);
-    const setColor = [1,0,0];
-    var centerPoint = [vertexX, vertexY, 0];
-    let count = 0;
-    let splits = numP-8;
-    let needVertexs = 8-splits;
+    var vertexX = 150 - Math.floor(Math.random()*300); //calcuates a random x value of the center piece
+    var vertexY = 150 - Math.floor(Math.random()*300); //calcuates a random y value of the center piece
+    const setColor = [1,0,0]; //setting the color of the pieces
+    var centerPoint = [vertexX, vertexY, 0]; //creating the centerpoint
+    let count = 0; //number of half triangles made
+    let splits = numP-8; //calculate the number of sides that need to be split up
+    let needVertexs = 8-splits; //when to force the algorithm to split sides
 
     //Dividing the octagon into pieces based on a center point
     for(let i = 0; i < 8; i++){
@@ -210,7 +212,7 @@ function createTriPieces(trianglePieces, octagonVertices, numP){
             ];
             trianglePieces.push(new Triangle(centerPoint, setColor, octagonVertices[i], setColor, midpoint, setColor));
             trianglePieces.push(new Triangle(centerPoint, setColor, midpoint, setColor, octagonVertices[i+1], setColor));
-        } else if (count < splits && i == 7){
+        } else if (count < splits && i == 7){ //special case if the starting vertex is at index 7 of the octagon vertices
             count++;
             var midpoint = [
             (octagonVertices[i][0]+octagonVertices[0][0])/2, //get x
