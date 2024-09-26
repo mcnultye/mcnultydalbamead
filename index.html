@@ -40,6 +40,7 @@ renderer.setPixelRatio(window.devicePixelRatio);
 renderer.setSize(window.innerWidth, window.innerHeight);
 
 //Creating the GUI
+//This allows the user to change the background of the screen when the window is open
 const gui = new GUI( { width: 280 } );
 gui.add(camera.position, 'z', 1000, 3000,).name('Change Screen Size');
 const materialParams = {
@@ -97,7 +98,7 @@ function Triangle (a, aCol, b, bCol, c, cCol, renderOrder = 0) {
  // Function to create an outlined octagon
  function OctagonOutline(vertices) {
     const points = vertices.map((v) => new THREE.Vector3(...v));
-    points.push(points[0]); // Close the loop
+    points.push(points[0]); 
 
     const geometry = new THREE.BufferGeometry().setFromPoints(points);
     const material = new THREE.LineBasicMaterial({ color: 0xffffff, linewidth: 2 }); // Outline material
@@ -114,15 +115,15 @@ function Triangle (a, aCol, b, bCol, c, cCol, renderOrder = 0) {
 function calculateOctagonVertices(radius) {
     let vertices = [];
     for (let i = 0; i < 8; i++) {
-        let angle = (i / 8) * 2 * Math.PI; // Divide the circle into 8 sections
-        let x = radius * Math.cos(angle);  // x = r * cos(theta)
-        let y = radius * Math.sin(angle);  // y = r * sin(theta)
-        vertices.push([x, y, 0]); // z = 0 for a 2D shape
+        let angle = (i / 8) * 2 * Math.PI; 
+        let x = radius * Math.cos(angle);  
+        let y = radius * Math.sin(angle);  
+        vertices.push([x, y, 0]); 
     }
     return vertices;
 }
 
-// Use the desired width and calculate the radius
+// Use the width to calculate the radius
 const width = 500;
 const radius = width / 2;
 const octagonVertices = calculateOctagonVertices(radius);
@@ -189,6 +190,7 @@ function createTriPieces(trianglePieces, octagonVertices, numP){
     let splits = numP-8;
     let needVertexs = 8-splits;
 
+    //Dividing the octagon into pieces based on a center point
     for(let i = 0; i < 8; i++){
         if(Math.floor(Math.random()*2) == 1 && count < splits && i < needVertexs){
             count++;
@@ -233,7 +235,7 @@ function createTriPieces(trianglePieces, octagonVertices, numP){
 }
 
 
-var trianglePieces = [];
+var trianglePieces = []; //array of pieces
 createTriPieces(trianglePieces, octagonVertices, 10); //number of pieces can be between 8-16
 
 var puzzlePieces = []; //recording orginal position of pieces before randomized on screen 
@@ -242,8 +244,7 @@ for(let i = 0; i < trianglePieces.length; i++)
     puzzlePieces[i] = new puzzleP(trianglePieces[i]);
 }
 
-var asBoxes = [];
-
+var asBoxes = []; //creating boxes to put the pieces into so they don't overlap
 for(let i = 0; i < puzzlePieces.length; i++)
 {
     randomizePosition(trianglePieces[i], i);
@@ -312,7 +313,7 @@ function resetPuzzle() {
         // Make the piece draggable again
         trianglePieces[i].mesh.isDraggable = true;
 
-        // Update the last position (for returning if dragged incorrectly)
+        // Update the last position 
         puzzlePieces[i].lastX = trianglePieces[i].mesh.position.x;
         puzzlePieces[i].lastY = trianglePieces[i].mesh.position.y;
     }
