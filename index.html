@@ -39,12 +39,19 @@ renderer.setClearColor(0x000000);
 renderer.setPixelRatio(window.devicePixelRatio);
 renderer.setSize(window.innerWidth, window.innerHeight);
 
+//Creating the GUI
 const gui = new GUI( { width: 280 } );
 gui.add(camera.position, 'z', 1000, 3000,).name('Change Screen Size');
 const materialParams = {
     backgroundColor: scene.background.getHex(),
 };
 gui.addColor(materialParams, 'backgroundColor').onChange((value)=> scene.background = new THREE.Color(value));
+
+//Adding sound
+const listener = new THREE.AudioListener();
+camera.add( listener );
+const sound = new THREE.Audio( listener );
+var audioLoader = new THREE.AudioLoader();
 
 let raycaster = new THREE.Raycaster();
 let mouse = new THREE.Vector2();
@@ -140,6 +147,19 @@ function puzzleP(tri) //taking single triangle for now
             tri.mesh.position.x = this.firstX;
             tri.mesh.position.y = this.firstY;
             cE = true;
+            audioLoader.load( 'ding.mp3', function( buffer ) {
+                sound.setBuffer( buffer );
+                sound.setVolume( 0.5 );
+                sound.duration = 1;
+                sound.play();
+            }); 
+        } else {
+            audioLoader.load( 'wrong.mp3', function( buffer ) {
+                sound.setBuffer( buffer );
+                sound.setVolume( 0.5 );
+                sound.duration = 1;
+                sound.play();
+            }); 
         }
         return cE;
     }
