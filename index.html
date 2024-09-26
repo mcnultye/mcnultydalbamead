@@ -283,22 +283,6 @@ function randomizePosition(triPiece, i)
     }
 }
 
-/*
-for(let i = 0; i < trianglePieces.length; i++){
-    let degree = Math.floor(Math.random()*200+175);
-    if(Math.floor(Math.random()*2) == 1){
-        trianglePieces[i].mesh.position.y += (degree-75);
-    }else {
-        trianglePieces[i].mesh.position.y -= degree;
-    }
-    degree = Math.floor(Math.random()*400+425);
-    if(Math.floor(Math.random()*2) == 1){
-        trianglePieces[i].mesh.position.x += degree;
-    }else {
-        trianglePieces[i].mesh.position.x -= degree;
-    }
-}
-*/
 
 for(let i = 0; i < trianglePieces.length; i++) //recording where they were randomized to
 {
@@ -306,6 +290,31 @@ for(let i = 0; i < trianglePieces.length; i++) //recording where they were rando
     puzzlePieces[i].lastY = trianglePieces[i].mesh.position.y;
 }
 
+// Function to check if the puzzle is complete
+function isPuzzleComplete() {
+    return puzzlePieces.every(p => !p.triangle.mesh.isDraggable); // All pieces should not be draggable
+}
+
+// Function to reset the puzzle
+function resetPuzzle() {
+    // Randomize the position of each piece again
+    for (let i = 0; i < puzzlePieces.length; i++) {
+        trianglePieces[i].mesh.position.set(0, 0, 0); // Reset position to origin first
+        randomizePosition(trianglePieces[i], i); // Randomize new position
+
+        // Update the Box3 for collision detection
+        asBoxes[i] = new THREE.Box3().setFromObject(trianglePieces[i].mesh);
+
+        // Make the piece draggable again
+        trianglePieces[i].mesh.isDraggable = true;
+
+        // Update the last position (for returning if dragged incorrectly)
+        puzzlePieces[i].lastX = trianglePieces[i].mesh.position.x;
+        puzzlePieces[i].lastY = trianglePieces[i].mesh.position.y;
+    }
+
+    console.log('Puzzle has been reset.');
+}
 // Mouse events for dragging
 window.addEventListener('mousedown', onMouseDown, false);
 window.addEventListener('mousemove', onMouseMove, false);
@@ -329,7 +338,7 @@ function onMouseDown(event) {
 
     raycaster.setFromCamera(mouse, camera);
 
-    // Get all draggable objects by checking the `isDraggable` property
+    // Get all draggable objects
     const draggableObjects = scene.children.filter(
         (child) => child.isDraggable
     );
@@ -382,6 +391,11 @@ if (dragging && selectedPiece)  //locks it into place
 
   dragging = false;
   selectedPiece = null;
+
+    // Check if the puzzle is complete and reset if needed
+    if (isPuzzleComplete()) {
+        setTimeout(resetPuzzle, 2000); // Wait 2 seconds before resetting the puzzle
+}
 }
 
 
