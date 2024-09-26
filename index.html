@@ -287,36 +287,50 @@ window.addEventListener('mousedown', onMouseDown, false);
 window.addEventListener('mousemove', onMouseMove, false);
 window.addEventListener('mouseup', onMouseUp, false);
 
-function onMouseDown(event) {
-  event.preventDefault();
-  mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
-  mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
-
-  raycaster.setFromCamera(mouse, camera);
-
- // Get all draggable objects by checking the `isDraggable` property
- const draggableObjects = scene.children.filter(
-    (child) => child.isDraggable
-  );
-
-  // Check intersections only with draggable objects
-  const intersects = raycaster.intersectObjects(draggableObjects);
-  if (intersects.length > 0) {
-    selectedPiece = intersects[0].object;
-    dragging = true;
-
-    // Get the point on the dragging plane
-    raycaster.ray.intersectPlane(dragPlane, intersection);
-    dragOffset.copy(intersection).sub(selectedPiece.position);
+function getMousePosition(event, canvas) {
+    const rect = canvas.getBoundingClientRect(); // Get the canvas position and size
+    return {
+        x: ((event.clientX - rect.left) / rect.width) * 2 - 1,
+        y: -((event.clientY - rect.top) / rect.height) * 2 + 1
+    };
 }
+
+function onMouseDown(event) {
+    event.preventDefault();
+
+    // Get the correct mouse position relative to the canvas
+    const mousePos = getMousePosition(event, renderer.domElement); 
+    mouse.x = mousePos.x;
+    mouse.y = mousePos.y;
+
+    raycaster.setFromCamera(mouse, camera);
+
+    // Get all draggable objects by checking the `isDraggable` property
+    const draggableObjects = scene.children.filter(
+        (child) => child.isDraggable
+    );
+
+    // Check intersections only with draggable objects
+    const intersects = raycaster.intersectObjects(draggableObjects);
+    if (intersects.length > 0) {
+        selectedPiece = intersects[0].object;
+        dragging = true;
+
+        // Get the point on the dragging plane
+        raycaster.ray.intersectPlane(dragPlane, intersection);
+        dragOffset.copy(intersection).sub(selectedPiece.position);
+    }
 }
 
 function onMouseMove(event) {
     event.preventDefault();
-    mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
-    mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
 
     if (dragging && selectedPiece) {
+        // Get the correct mouse position relative to the canvas
+        const mousePos = getMousePosition(event, renderer.domElement); 
+        mouse.x = mousePos.x;
+        mouse.y = mousePos.y;
+
         raycaster.setFromCamera(mouse, camera);
 
         // Update intersection with the drag plane
