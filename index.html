@@ -1,10 +1,24 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>mcnultydalbamead_3210_1</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            background-color: #f0f0f0;
+        }
+        .title {
+            font-size: 2.5em;
+            color: #333;
+            margin: 20px 0;
+        }
+    </style>
 </head>
 <body>
-
+    <h1 class="title">Octa Puzzler</h1>
     <canvas id="myCanvas" width="1200" height="900"></canvas>
 
     <script type="module">
@@ -78,7 +92,7 @@ function Triangle (a, aCol, b, bCol, c, cCol, renderOrder = 0) {
     points.push(points[0]); // Close the loop
 
     const geometry = new THREE.BufferGeometry().setFromPoints(points);
-    const material = new THREE.LineBasicMaterial({ color: 0x0000ff, linewidth: 2 }); // Outline material
+    const material = new THREE.LineBasicMaterial({ color: 0xffffff, linewidth: 2 }); // Outline material
 
     this.line = new THREE.Line(geometry, material);
 
@@ -201,6 +215,51 @@ for(let i = 0; i < trianglePieces.length; i++)
     puzzlePieces[i] = new puzzleP(trianglePieces[i]);
 }
 
+var asBoxes = [];
+
+for(let i = 0; i < puzzlePieces.length; i++)
+{
+    randomizePosition(trianglePieces[i], i);
+    asBoxes[i] = new THREE.Box3().setFromObject(trianglePieces[i].mesh);
+}
+
+function randomizePosition(triPiece, i)
+{
+    let degree = Math.floor(Math.random()*200+175);
+    let addX = 0;
+    let addY = 0;
+    if(Math.floor(Math.random()*2) == 1){
+        addY = degree-70;
+    }else {
+        addY = 0- degree;
+    }
+
+    degree = Math.floor(Math.random()*400+425);
+    if(Math.floor(Math.random()*2) == 1){
+        addX = degree;
+    }else {
+        addX = 0 - degree;
+    }
+    triPiece.mesh.position.x += addX;
+    triPiece.mesh.position.y += addY;
+    if(i > 0)
+    {
+        const tempB = new THREE.Box3().setFromObject(triPiece.mesh);
+        for(let j = 0; j < asBoxes.length; j++)
+        {
+            if(tempB.intersectsBox(asBoxes[j]))
+            {
+                triPiece.mesh.position.x -= addX;
+                triPiece.mesh.position.y -= addY;
+                randomizePosition(triPiece, i);
+                return;
+            }
+            
+        }
+    }
+}
+
+/*
 for(let i = 0; i < trianglePieces.length; i++){
     let degree = Math.floor(Math.random()*200+175);
     if(Math.floor(Math.random()*2) == 1){
@@ -215,6 +274,7 @@ for(let i = 0; i < trianglePieces.length; i++){
         trianglePieces[i].mesh.position.x -= degree;
     }
 }
+*/
 
 for(let i = 0; i < trianglePieces.length; i++) //recording where they were randomized to
 {
