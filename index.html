@@ -201,6 +201,51 @@ for(let i = 0; i < trianglePieces.length; i++)
     puzzlePieces[i] = new puzzleP(trianglePieces[i]);
 }
 
+var asBoxes = [];
+
+for(let i = 0; i < puzzlePieces.length; i++)
+{
+    randomizePosition(trianglePieces[i], i);
+    asBoxes[i] = new THREE.Box3().setFromObject(trianglePieces[i].mesh);
+}
+
+function randomizePosition(triPiece, i)
+{
+    let degree = Math.floor(Math.random()*200+175);
+    let addX = 0;
+    let addY = 0;
+    if(Math.floor(Math.random()*2) == 1){
+        addY = degree-70;
+    }else {
+        addY = 0- degree;
+    }
+
+    degree = Math.floor(Math.random()*400+425);
+    if(Math.floor(Math.random()*2) == 1){
+        addX = degree;
+    }else {
+        addX = 0 - degree;
+    }
+    triPiece.mesh.position.x += addX;
+    triPiece.mesh.position.y += addY;
+    if(i > 0)
+    {
+        const tempB = new THREE.Box3().setFromObject(triPiece.mesh);
+        for(let j = 0; j < asBoxes.length; j++)
+        {
+            if(tempB.intersectsBox(asBoxes[j]))
+            {
+                triPiece.mesh.position.x -= addX;
+                triPiece.mesh.position.y -= addY;
+                randomizePosition(triPiece, i);
+                return;
+            }
+            
+        }
+    }
+}
+
+/*
 for(let i = 0; i < trianglePieces.length; i++){
     let degree = Math.floor(Math.random()*200+175);
     if(Math.floor(Math.random()*2) == 1){
@@ -215,6 +260,7 @@ for(let i = 0; i < trianglePieces.length; i++){
         trianglePieces[i].mesh.position.x -= degree;
     }
 }
+*/
 
 for(let i = 0; i < trianglePieces.length; i++) //recording where they were randomized to
 {
